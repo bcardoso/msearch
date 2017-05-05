@@ -61,6 +61,7 @@ case $1 in
 
 	-s) # stop after current
 		STOPAFTERCURRENT &
+		echo "> will stop after $(mpc current -f "%artist% '%title%' (%time%)")"
 		;;
 
 	-r) # toggle random mode
@@ -69,25 +70,33 @@ case $1 in
 	
 	-ra) # random artist
 		ARTIST=$(mpc list artist | shuf | head -1)
-		mpc search artist "$ARTIST" | mpc add
+		MPCSEARCH artist "$ARTIST"
 		echo "> added all songs by \"$ARTIST\" to current playlist"
 		;;
 	
 	-rb) # random album
 		ALBUM=$(mpc list album | shuf | head -1)
-		mpc search album "$ALBUM" | mpc add
+		MPCSEARCH album "$ALBUM"
 		echo "> added album \"$ALBUM\" to current playlist"
 		;;		
 	
 	-rg) # random genre
 		GENRE=$(mpc list genre | shuf | head -1)
-		mpc search genre "$GENRE" | mpc add
+		MPCSEARCH genre "$GENRE" 
 		echo "> added all \"$GENRE\" songs to current playlist"
 		;;
 
+	-rs) # random songs
+		NUM=78
+		mpc search any '' | shuf | head -$NUM | mpc add
+		echo "> added $NUM random songs to current playlist"
+		;;
+
 	-new) # recently added/modified songs (up to 3 days ago)
+		DAYS=3
 		cd $MUSICDIR
-		find . -type f -mtime -3  | egrep '\.mp3$|\.flac$|\.ogg$' | awk '{ sub(/^\.\//, ""); print }' | sort | mpc add
+		find . -type f -mtime -$DAYS  | egrep '\.mp3$|\.flac$|\.ogg$' | awk '{ sub(/^\.\//, ""); print }' | sort | mpc add
+		echo "> added all new music from the past $DAYS days"
 		;;
 
 	-a) # add artist(s) to playlist
