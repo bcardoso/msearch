@@ -13,9 +13,10 @@ HELP () {
 	echo "\n$(basename $0) [option] [keyword(s)]\n"
 	grep ") \#" $0 | sed -e 's/\t/\ /g;s/)\ \#/\t/g'
 	echo
-	echo "usage: $(basename $0) -a sabbath \"miles davis\" dylan"
-	echo "usage: $(basename $0) -g instrumental rock samba etc"
-	echo "usage: $(basename $0) -rb"
+	echo "usage:"
+	echo "./$(basename $0) -a sabbath \"miles davis\" dylan"
+	echo "./$(basename $0) -g instrumental rock samba etc"
+	echo "./$(basename $0) -rb"
 	echo
 }
 
@@ -27,7 +28,7 @@ MPCSEARCH () {
 	if [ "$#" -ge 2 ] ; then
 		MODE=$1
 		shift
-		for keyword in $@ ; do
+		for keyword in "$@" ; do
 			mpc search $MODE "$keyword"
 		done | mpc add
 	else
@@ -52,7 +53,7 @@ case $1 in
 		mpc clear
 		;;
 
-	-C) # 'crop' playlist (clears all but current song)
+	-C) # 'crop' all but current song
 		mpc crop
 		;;
 
@@ -89,12 +90,13 @@ case $1 in
 
 	-rs) # random songs
 		NUM=78
+		[ ! -z $2 ] && NUM=$2
 		mpc search any '' | shuf | head -$NUM | mpc add
 		echo "> added $NUM random songs to current playlist"
 		;;
 
-	-new) # recently added/modified songs (up to 3 days ago)
-		DAYS=3
+	-new) # recently (7d) added/modified songs
+		DAYS=7
 		cd $MUSICDIR
 		find . -type f -mtime -$DAYS  | egrep '\.mp3$|\.flac$|\.ogg$' | awk '{ sub(/^\.\//, ""); print }' | sort | mpc add
 		echo "> added all new music from the past $DAYS days"
@@ -102,20 +104,21 @@ case $1 in
 
 	-a) # add artist(s) to playlist
 		shift
-		MPCSEARCH artist $@
+		MPCSEARCH artist "$@"
+		
 		;;
 
 	-b) # add album(s) to playlist
 		shift
-		MPCSEARCH album $@
+		MPCSEARCH album "$@"
 		;;
 	
 	-g) # add genre(s) to playlist
 		shift
-		MPCSEARCH genre $@
+		MPCSEARCH genre "$@"
 		;;
 	
-	-i) # fzf mpc search; 'insert' below current
+	-i) # fzf mpc search;'insert' below current
 		FZFSEARCH insert
 		;;
 
