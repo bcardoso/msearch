@@ -16,7 +16,7 @@ simple mpd playlist manager using mpc search and random options. depends on [mpc
     -rb	 random album
     -rg	 random genre
     -rs	 random songs
-    -new	 recently added/modified songs (up to 3 days ago)
+    -new	 recently (7d) added/modified songs
     -a	 add artist(s) to playlist
     -b	 add album(s) to playlist
     -g	 add genre(s) to playlist
