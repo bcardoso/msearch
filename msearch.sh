@@ -15,13 +15,14 @@ HELP () {
 	echo
 	echo "usage:"
 	echo "./$(basename $0) -a sabbath \"miles davis\" dylan"
-	echo "./$(basename $0) -g instrumental rock samba etc"
 	echo "./$(basename $0) -rb"
 	echo
 }
 
 FZFSEARCH () {
-	mpc search any '' | fzf -m -e | sort | mpc $1
+	ACTION=$1
+	shift
+	mpc search any '' | fzf -m -e -q "$@" | sort | mpc $ACTION
 }
 
 MPCSEARCH () {
@@ -119,10 +120,11 @@ case $1 in
 		;;
 	
 	-i) # fzf mpc search;'insert' below current
-		FZFSEARCH insert
+		shift
+		FZFSEARCH insert "$@"
 		;;
 
 	*) # fzf mpc search; 'add' to playlist end
-		FZFSEARCH add
+		FZFSEARCH add "$@"
 		;;
 esac
