@@ -22,7 +22,8 @@ HELP () {
 FZFSEARCH () {
 	ACTION=$1
 	shift
-	mpc search any '' | fzf -m -e -q "$@" | sort | mpc $ACTION
+	QUERY="$@"
+	mpc search any '' | fzf -m -e -q "$QUERY" | sort | mpc $ACTION
 }
 
 MPCSEARCH () {
@@ -119,12 +120,12 @@ case $1 in
 		MPCSEARCH genre "$@"
 		;;
 	
-	-i) # fzf mpc search;'insert' below current
+	-i) # fzf search; 'insert' below current
 		shift
 		FZFSEARCH insert "$@"
 		;;
 
-	*) # fzf mpc search; 'add' to playlist end
+	*) # fzf search; 'add' to playlist end
 		FZFSEARCH add "$@"
 		;;
 esac
