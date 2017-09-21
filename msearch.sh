@@ -122,6 +122,7 @@ case $1 in
 	
 	-i) # fzf search; 'insert' below current
 		shift
+		mpc random off
 		FZFSEARCH insert "$@"
 		;;
 
