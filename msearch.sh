@@ -10,7 +10,7 @@
 MUSICDIR=/media/arquivos/musicas
 
 HELP () {
-    echo "\n$(basename $0) [option] [keyword(s)]\n"
+    echo -e "\n$(basename $0) [option] [keyword(s)]\n"
     grep ") \#" $0 | sed -e 's/\t/\ /g;s/)\ \#/\t/g'
     echo
     echo "usage:"
@@ -19,24 +19,55 @@ HELP () {
     echo
 }
 
-FZFSEARCH () {
-    ACTION=$1
-    shift
-    QUERY="$@"
-    mpc search any '' | fzf -m -e -q "$QUERY" | sort | mpc $ACTION
-}
-
 MPCSEARCH () {
     if [ "$#" -ge 2 ] ; then
 	MODE=$1
 	shift
 	for keyword in "$@" ; do
-	    mpc search $MODE "$keyword"
-	done | mpc add
+	    mpc search $MODE "$keyword" | mpc add
+	    echo "> added \"$keyword\" to current playlist"
+	done
+	
     else
 	HELP
 	exit 1
     fi
+}
+
+FZFSEARCH () {
+    ACTION=$1
+    shift
+    QUERY="$@"
+    if [ -z $QUERY ] ; then
+	SELECTOR="fzf -m -e"
+    else
+	SELECTOR="fzf -m -e -q ${QUERY}"
+    fi
+    
+    case $ACTION in
+	add | insert)
+	    mpc search any '' | $SELECTOR | sort | mpc $ACTION
+	    ;;
+
+	list_artist)
+	    mpc list artist | $SELECTOR | while read ARTIST ; do
+		MPCSEARCH artist "$ARTIST"
+	    done
+	    ;;
+
+	list_album)
+	    mpc list album | $SELECTOR | while read ALBUM ; do
+		MPCSEARCH album "$ALBUM"
+	    done
+	    ;;
+
+	list_genre)
+	    mpc list genre | $SELECTOR | while read GENRE ; do
+		MPCSEARCH genre "$GENRE"
+	    done
+	    ;;
+    esac
+	
 }
 
 STOPAFTERCURRENT () {
@@ -75,7 +106,6 @@ case $1 in
     -ra) # random artist
 	ARTIST=$(mpc list artist | shuf | head -1)
 	MPCSEARCH artist "$ARTIST"
-	echo "> added all songs by \"$ARTIST\" to current playlist"
 	;;
     
     -rb) # random album
@@ -84,18 +114,15 @@ case $1 in
 	    mpc list album | shuf | head -$NUM | while read ALBUM ; do
 		MPCSEARCH album "$ALBUM"
 	    done
-	    echo "> added $NUM albuns to current playlist"
 	else
 	    ALBUM=$(mpc list album | shuf | head -1)
 	    MPCSEARCH album "$ALBUM"
-	    echo "> added album \"$ALBUM\" to current playlist"
 	fi
 	;;		
     
     -rg) # random genre
 	GENRE=$(mpc list genre | shuf | head -1)
-	MPCSEARCH genre "$GENRE" 
-	echo "> added all \"$GENRE\" songs to current playlist"
+	MPCSEARCH genre "$GENRE"
 	;;
     
     -rs) # random songs
@@ -104,8 +131,23 @@ case $1 in
 	mpc search any '' | shuf | head -$NUM | mpc add
 	echo "> added $NUM random songs to current playlist"
 	;;
+
+    -la) # search artists list
+	shift
+	FZFSEARCH list_artist "$@"
+	;;
     
-    -new) # recently (7d) added/modified songs
+    -lb) # search albums list
+	shift
+	FZFSEARCH list_album "$@"
+	;;
+    
+    -lg) # search genres list
+	shift
+	FZFSEARCH list_genre "$@"
+	;;
+    
+    -n) # recently (7d) added/modified songs
 	DAYS=7
 	cd $MUSICDIR
 	find . -type f -mtime -$DAYS  | egrep '\.mp3$|\.flac$|\.ogg$' | awk '{ sub(/^\.\//, ""); print }' | sort | mpc add
