@@ -1,6 +1,7 @@
 #!/bin/sh
 
-### msearch.sh 0.2 // bcardoso
+### msearch.sh 0.3 // bcardoso
+### 2018-06-20: lists options
 ### 2017-05-05: random songs
 ### 2017-04-19: random artist/album/genre, new songs options
 ### 2017-04-02: mpc search >> current playlist
