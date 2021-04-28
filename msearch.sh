@@ -149,7 +149,7 @@ case $1 in
 	;;
     
     -n) # recently (7d) added/modified songs
-        [ -z $2 ] && DAYS=15 || DAYS=$2
+        [ -z $2 ] && DAYS=7 || DAYS=$2
 	cd $MUSICDIR
 	find . -type f -mtime -$DAYS  | egrep '\.mp3$|\.flac$|\.ogg$' |
 		awk '{ sub(/^\.\//, ""); print }' | sort | mpc add

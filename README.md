@@ -1,5 +1,7 @@
 # msearch.sh
-simple mpd playlist manager using mpc search and random options. depends on [mpc](https://musicpd.org/clients/mpc/) and [fzf](https://github.com/junegunn/fzf).
+simple mpd playlist manager script using mpc search commands and random options.
+
+depends on [mpc](https://musicpd.org/clients/mpc/) and [fzf](https://github.com/junegunn/fzf).
 
 ## how to use
 `msearch.sh` [option] [keyword(s)]
@@ -24,7 +26,9 @@ simple mpd playlist manager using mpc search and random options. depends on [mpc
     -i	 fzf search; 'insert' below current
     *	 fzf search; 'add' to playlist end
 
-usage:
-./msearch.sh -a sabbath "miles davis" dylan
-./msearch.sh -rb
+usage examples:
+
+`./msearch.sh -a sabbath "miles davis" dylan` # add multiple artists
+
+`./msearch.sh -rb` # add a random album
 
