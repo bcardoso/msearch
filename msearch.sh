@@ -8,7 +8,7 @@
 # requires mpc, fzf
 
 # your mpd music dir
-MUSICDIR=/media/arquivos/musicas
+MUSICDIR="$HOME/lib/music/collection"
 
 HELP () {
     echo -e "\n$(basename $0) [option] [keyword(s)]\n"
@@ -39,31 +39,31 @@ FZFSEARCH () {
     ACTION=$1
     shift
     QUERY="$@"
-    if [ -z $QUERY ] ; then
-	SELECTOR="fzf -m -e"
+    if [ "$QUERY" == "" ] ; then
+	SELECTOR="fzf --cycle -m -e"
     else
-	SELECTOR="fzf -m -e -q ${QUERY}"
+	SELECTOR="fzf --cycle -m -e -q \"$QUERY\""
     fi
     
     case $ACTION in
 	add | insert)
-	    mpc search any '' | $SELECTOR | sort | mpc $ACTION
+	    mpc search any '' | eval $SELECTOR | sort | mpc $ACTION
 	    ;;
 
 	list_artist)
-	    mpc list artist | $SELECTOR | while read ARTIST ; do
+	    mpc list artist | eval $SELECTOR | while read ARTIST ; do
 		MPCSEARCH artist "$ARTIST"
 	    done
 	    ;;
 
 	list_album)
-	    mpc list album | $SELECTOR | while read ALBUM ; do
+	    mpc list album | eval $SELECTOR | while read ALBUM ; do
 		MPCSEARCH album "$ALBUM"
 	    done
 	    ;;
 
 	list_genre)
-	    mpc list genre | $SELECTOR | while read GENRE ; do
+	    mpc list genre | eval $SELECTOR | while read GENRE ; do
 		MPCSEARCH genre "$GENRE"
 	    done
 	    ;;
@@ -149,9 +149,10 @@ case $1 in
 	;;
     
     -n) # recently (7d) added/modified songs
-	DAYS=7
+        [ -z $2 ] && DAYS=15 || DAYS=$2
 	cd $MUSICDIR
-	find . -type f -mtime -$DAYS  | egrep '\.mp3$|\.flac$|\.ogg$' | awk '{ sub(/^\.\//, ""); print }' | sort | mpc add
+	find . -type f -mtime -$DAYS  | egrep '\.mp3$|\.flac$|\.ogg$' |
+		awk '{ sub(/^\.\//, ""); print }' | sort | mpc add
 	echo "> added all new music from the past $DAYS days"
 	;;
 
