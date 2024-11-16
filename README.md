@@ -1,34 +1,34 @@
 # msearch.sh
-simple mpd playlist manager script using mpc search commands and random options.
 
-depends on [mpc](https://musicpd.org/clients/mpc/) and [fzf](https://github.com/junegunn/fzf).
+Simple [MPD](https://www.musicpd.org/) playlist manager script using mpc search commands and random options.
+
+Depends on [mpc](https://musicpd.org/clients/mpc/) and [fzf](https://github.com/junegunn/fzf).
 
 ## how to use
 `msearch.sh` [option] [keyword(s)]
 
-    -h	 this help
-    -c	 clear playlist
-    -C	 'crop' all but current song
-    -p	 toggle play-pause
-    -s	 stop after current
-    -r	 toggle random mode
-    -ra	 random artist
-    -rb	 random album
-    -rg	 random genre
-    -rs	 random songs
-    -la	 search artists list
-    -lb	 search albums list
-    -lg	 search genres list
-    -n	 recently (7d) added/modified songs
-    -a	 add artist(s) to playlist
-    -b	 add album(s) to playlist
-    -g	 add genre(s) to playlist
-    -i	 fzf search; 'insert' below current
-    *	 fzf search; 'add' to playlist end
+    h | -h	 this help
+    u | -u	 update database
+    c | -c	 clear playlist
+    C | -C	 'crop' all but current song
+    p | -p	 toggle play-pause
+    s | -s	 stop after current
+    r | -r	 toggle random mode
+    ra | -ra	 random artist
+    rb | -rb	 random album
+    rg | -rg	 random genre
+    rs | -rs	 random songs
+    la | -la	 search artists list
+    lb | -lb	 search albums list
+    lg | -lg	 search genres list
+    n | -n	 recently (7d) added/modified songs
+    a | -a	 add artist(s) to playlist
+    b | -b	 add album(s) to playlist
+    g | -g	 add genre(s) to playlist
+    i | -i	 fzf search, 'insert' below current
+    add | *	 fzf search, 'add' to playlist end
 
-usage examples:
+Usage examples:
 
-`./msearch.sh -a sabbath "miles davis" dylan` # add multiple artists
-
-`./msearch.sh -rb` # add a random album
-
+- Add multiple artists: `./msearch.sh -a sabbath "miles davis" dylan`
+- Add a random album: `./msearch.sh -rb`
