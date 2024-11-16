@@ -1,77 +1,79 @@
-#!/bin/sh
+#!/usr/bin/env bash
 
-### msearch.sh 0.3 // bcardoso
+### msearch.sh 0.4 // bcardoso
+
+# requires: mpc, fzf
+
+### 2024-11-16: refactor
 ### 2018-06-20: lists options
 ### 2017-05-05: random songs
 ### 2017-04-19: random artist/album/genre, new songs options
 ### 2017-04-02: mpc search >> current playlist
-# requires mpc, fzf
 
-# your mpd music dir
-MUSICDIR="$HOME/lib/music/collection"
+# your MPD music dir
+readonly MUSICDIR="$HOME/music/collection"
 
-HELP () {
-    echo -e "\n$(basename $0) [option] [keyword(s)]\n"
-    grep ") \#" $0 | sed -e 's/\t/\ /g;s/)\ \#/\t/g'
-    echo
-    echo "usage:"
-    echo "./$(basename $0) -a sabbath \"miles davis\" dylan"
-    echo "./$(basename $0) -rb"
-    echo
+set -o errexit
+set -o pipefail
+
+function help () {
+    echo -e "\n$(basename "$0") [option] [keyword(s)]\n"
+    grep ") # [a-z']" "$0" | sed -e 's/\t/\ /g;s/)\ \#/\t/g'
+    echo -e "\nUsage:\n"
+    echo -e "$(basename "$0") -a sabbath \"miles davis\" dylan"
+    echo -e "$(basename "$0") -rb\n"
 }
 
-MPCSEARCH () {
+function mpc_search () {
     if [ "$#" -ge 2 ] ; then
-	MODE=$1
-	shift
-	for keyword in "$@" ; do
-	    mpc search $MODE "$keyword" | mpc add
-	    echo "> added \"$keyword\" to current playlist"
-	done
-	
+        mode=$1
+        shift
+        for keyword in "$@" ; do
+            mpc search "$mode" "$keyword" | mpc add
+            echo "> Added \"$keyword\" to current playlist"
+        done
+
     else
-	HELP
-	exit 1
+        help
+        exit 1
     fi
 }
 
-FZFSEARCH () {
-    ACTION=$1
+function fzf_search () {
+    local action=$1
     shift
-    QUERY="$@"
-    if [ "$QUERY" == "" ] ; then
-	SELECTOR="fzf --cycle -m -e"
-    else
-	SELECTOR="fzf --cycle -m -e -q \"$QUERY\""
-    fi
-    
-    case $ACTION in
-	add | insert)
-	    mpc search any '' | eval $SELECTOR | sort | mpc $ACTION
-	    ;;
+    local query="$*"
+    local selector="fzf --cycle -m -e"
 
-	list_artist)
-	    mpc list artist | eval $SELECTOR | while read ARTIST ; do
-		MPCSEARCH artist "$ARTIST"
-	    done
-	    ;;
+    [ -n "$query" ] && selector+=" -q \"$query\""
 
-	list_album)
-	    mpc list album | eval $SELECTOR | while read ALBUM ; do
-		MPCSEARCH album "$ALBUM"
-	    done
-	    ;;
+    case $action in
+        add | insert)
+            mpc search any '' | eval "$selector" | sort | mpc "$action"
+            ;;
 
-	list_genre)
-	    mpc list genre | eval $SELECTOR | while read GENRE ; do
-		MPCSEARCH genre "$GENRE"
-	    done
-	    ;;
+        list_artist)
+            mpc list artist | eval "$selector" | while read -r artist ; do
+                mpc_search artist "$artist"
+            done
+            ;;
+
+        list_album)
+            mpc list album | eval "$selector" | while read -r album ; do
+                mpc_search album "$album"
+            done
+            ;;
+
+        list_genre)
+            mpc list genre | eval "$selector" | while read -r genre ; do
+                mpc_search genre "$genre"
+            done
+            ;;
     esac
-	
+
 }
 
-STOPAFTERCURRENT () {
+function mpc_stop_after_current () {
     mpc current --wait > /dev/null
     mpc stop > /dev/null
 }
@@ -79,105 +81,113 @@ STOPAFTERCURRENT () {
 
 ### MAIN
 case $1 in
-    -h) # this help
-	HELP
-	;;
-    
-    -c) # clear playlist
-	mpc clear
-	;;
-    
-    -C) # 'crop' all but current song
-	mpc crop
-	;;
-    
-    -p) # toggle play-pause
-	mpc toggle
-	;;
-    
-    -s) # stop after current
-	STOPAFTERCURRENT &
-	echo "> will stop after $(mpc current -f "%artist% '%title%' (%time%)")"
-	;;
+    h | -h) # this help
+        help
+        ;;
 
-    -r) # toggle random mode
-	mpc random > /dev/null
-	;;
-	
-    -ra) # random artist
-	ARTIST=$(mpc list artist | shuf | head -1)
-	MPCSEARCH artist "$ARTIST"
-	;;
-    
-    -rb) # random album
-	if [ ! -z $2 ] ; then
-	    NUM=$2
-	    mpc list album | shuf | head -$NUM | while read ALBUM ; do
-		MPCSEARCH album "$ALBUM"
-	    done
-	else
-	    ALBUM=$(mpc list album | shuf | head -1)
-	    MPCSEARCH album "$ALBUM"
-	fi
-	;;		
-    
-    -rg) # random genre
-	GENRE=$(mpc list genre | shuf | head -1)
-	MPCSEARCH genre "$GENRE"
-	;;
-    
-    -rs) # random songs
-	NUM=78
-	[ ! -z $2 ] && NUM=$2
-	mpc search any '' | shuf | head -$NUM | mpc add
-	echo "> added $NUM random songs to current playlist"
-	;;
+    u | -u) # update database
+        mpc update
+        ;;
 
-    -la) # search artists list
-	shift
-	FZFSEARCH list_artist "$@"
-	;;
-    
-    -lb) # search albums list
-	shift
-	FZFSEARCH list_album "$@"
-	;;
-    
-    -lg) # search genres list
-	shift
-	FZFSEARCH list_genre "$@"
-	;;
-    
-    -n) # recently (7d) added/modified songs
-        [ -z $2 ] && DAYS=7 || DAYS=$2
-	cd $MUSICDIR
-	find . -type f -mtime -$DAYS  | egrep '\.mp3$|\.flac$|\.ogg$' |
-		awk '{ sub(/^\.\//, ""); print }' | sort | mpc add
-	echo "> added all new music from the past $DAYS days"
-	;;
+    c | -c) # clear playlist
+        mpc clear
+        ;;
 
-    -a) # add artist(s) to playlist
-	shift
-	MPCSEARCH artist "$@"
-	;;
-    
-    -b) # add album(s) to playlist
-	shift
-	MPCSEARCH album "$@"
-	;;
-	
-    -g) # add genre(s) to playlist
-	shift
-	MPCSEARCH genre "$@"
-	;;
-    
-    -i) # fzf search; 'insert' below current
-	shift
-	mpc random off > /dev/null
-	FZFSEARCH insert "$@"
-	;;
+    C | -C) # 'crop' all but current song
+        mpc crop
+        ;;
 
-    *) # fzf search; 'add' to playlist end
-	FZFSEARCH add "$@"
-	;;
+    p | -p) # toggle play-pause
+        mpc toggle
+        ;;
+
+    s | -s) # stop after current
+        mpc_stop_after_current &
+        echo "> stop after $(mpc current -f "%artist% '%title%' (%time%)")"
+        ;;
+
+    r | -r) # toggle random mode
+        mpc random > /dev/null
+        ;;
+
+    ra | -ra) # random artist
+        artist=$(mpc list artist | shuf | head -1)
+        mpc_search artist "$artist"
+        ;;
+
+    rb | -rb) # random album
+        if [ -n "$2" ] ; then
+            num=$2
+            mpc list album | shuf | head -"$num" | while read -r album ; do
+                mpc_search album "$album"
+            done
+        else
+            album=$(mpc list album | shuf | head -1)
+            mpc_search album "$album"
+        fi
+        ;;
+
+    rg | -rg) # random genre
+        genre=$(mpc list genre | shuf | head -1)
+        mpc_search genre "$genre"
+        ;;
+
+    rs | -rs) # random songs
+        num=78
+        [ -n "$2" ] && num=$2
+        mpc search any '' | shuf | head -"$num" | mpc add
+        echo "> added $num random songs to current playlist"
+        ;;
+
+    la | -la) # search artists list
+        shift
+        fzf_search list_artist "$@"
+        ;;
+
+    lb | -lb) # search albums list
+        shift
+        fzf_search list_album "$@"
+        ;;
+
+    lg | -lg) # search genres list
+        shift
+        fzf_search list_genre "$@"
+        ;;
+
+    n | -n) # recently (7d) added/modified songs
+        days=7
+        [ -n "$2" ] && days=$2
+        cd "$MUSICDIR"
+        find . -type f -mtime -"$days" \
+            | grep -E '\.mp3$|\.flac$|\.ogg$' \
+            | awk '{ sub(/^\.\//, ""); print }' \
+            | sort \
+            | mpc add
+        echo "> added all new music from the past $days days"
+        ;;
+
+    a | -a) # add artist(s) to playlist
+        shift
+        mpc_search artist "$@"
+        ;;
+
+    b | -b) # add album(s) to playlist
+        shift
+        mpc_search album "$@"
+        ;;
+
+    g | -g) # add genre(s) to playlist
+        shift
+        mpc_search genre "$@"
+        ;;
+
+    i | -i) # fzf search, 'insert' below current
+        shift
+        mpc random off > /dev/null
+        fzf_search insert "$@"
+        ;;
+
+    add | *) # fzf search, 'add' to playlist end
+        fzf_search add "$@"
+        ;;
 esac
