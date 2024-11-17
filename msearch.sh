@@ -116,15 +116,10 @@ case $1 in
         ;;
 
     rb | -rb) # random album
-        if [ -n "$2" ] ; then
-            num=$2
-            mpc list album | shuf | head -"$num" | while read -r album ; do
-                mpc_search album "$album"
-            done
-        else
-            album=$(mpc list album | shuf | head -1)
+        [ -n "$2" ] && num=$2 || num=1
+        mpc list album | shuf | head -"$num" | while read -r album ; do
             mpc_search album "$album"
-        fi
+        done
         ;;
 
     rg | -rg) # random genre
@@ -133,8 +128,7 @@ case $1 in
         ;;
 
     rs | -rs) # random songs
-        num=78
-        [ -n "$2" ] && num=$2
+        [ -n "$2" ] && num=$2 || num=78
         mpc search any '' | shuf | head -"$num" | mpc add
         echo "> added $num random songs to current playlist"
         ;;
@@ -155,8 +149,7 @@ case $1 in
         ;;
 
     n | -n) # recently (7d) added/modified songs
-        days=7
-        [ -n "$2" ] && days=$2
+        [ -n "$2" ] && days=$2 || days=7
         cd "$MUSICDIR"
         find . -type f -mtime -"$days" \
             | grep -E '\.mp3$|\.flac$|\.ogg$' \
