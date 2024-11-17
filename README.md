@@ -32,3 +32,10 @@ Usage examples:
 
 - Add multiple artists: `./msearch.sh -a sabbath "miles davis" dylan`
 - Add a random album: `./msearch.sh -rb`
+
+
+## shortcut
+
+```sh
+alias ms="~/bin/msearch.sh"
+```
