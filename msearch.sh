@@ -111,25 +111,25 @@ case $1 in
         ;;
 
     ra | -ra) # random artist
-        artist=$(mpc list artist | shuf | head -1)
+        artist=$(mpc list artist | shuf -n 1)
         mpc_search artist "$artist"
         ;;
 
     rb | -rb) # random album
         [ -n "$2" ] && num=$2 || num=1
-        mpc list album | shuf | head -"$num" | while read -r album ; do
+        mpc list album | shuf -n "$num" | while read -r album ; do
             mpc_search album "$album"
         done
         ;;
 
     rg | -rg) # random genre
-        genre=$(mpc list genre | shuf | head -1)
+        genre=$(mpc list genre | shuf -n 1)
         mpc_search genre "$genre"
         ;;
 
     rs | -rs) # random songs
         [ -n "$2" ] && num=$2 || num=78
-        mpc search any '' | shuf | head -"$num" | mpc add
+        mpc search any '' | shuf -n "$num" | mpc add
         echo "> added $num random songs to current playlist"
         ;;
 
