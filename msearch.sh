@@ -30,7 +30,7 @@ function mpc_search () {
         shift
         for keyword in "$@" ; do
             mpc search "$mode" "$keyword" | mpc add
-            echo "> Added \"$keyword\" to current playlist"
+            echo "> Added $mode \"$keyword\""
         done
 
     else
@@ -103,7 +103,7 @@ case $1 in
 
     s | -s) # stop after current
         mpc_stop_after_current &
-        echo "> stop after $(mpc current -f "%artist% '%title%' (%time%)")"
+        echo "> Stop after $(mpc current -f "%artist% '%title%' (%time%)")"
         ;;
 
     r | -r) # toggle random mode
@@ -130,7 +130,7 @@ case $1 in
     rs | -rs) # random songs
         [ -n "$2" ] && num=$2 || num=78
         mpc search any '' | shuf -n "$num" | mpc add
-        echo "> added $num random songs to current playlist"
+        echo "> Added $num random songs to current playlist"
         ;;
 
     la | -la) # search artists list
@@ -156,7 +156,7 @@ case $1 in
             | awk '{ sub(/^\.\//, ""); print }' \
             | sort \
             | mpc add
-        echo "> added all new music from the past $days days"
+        echo "> Added all new music from the past $days days"
         ;;
 
     a | -a) # add artist(s) to playlist
